@@ -1,0 +1,12 @@
+{
+  "name": "xlsx-to-md",
+  "version": "1.0.0",
+  "description": "Convert XLSX to Markdown using Streamlit",
+  "main": "app.py",
+  "scripts": {
+    "dev": ".\\.venv\\Scripts\\python.exe -m streamlit run app.py --server.headless true --server.port 8502"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

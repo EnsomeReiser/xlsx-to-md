@@ -4,6 +4,8 @@
   "description": "Convert XLSX to Markdown using Streamlit",
   "main": "app.py",
   "scripts": {
+    "install-deps": "pip install -r requirements.txt pyinstaller",
+    "build": "python build_exe.py",
     "dev": ".\\.venv\\Scripts\\python.exe -m streamlit run app.py --server.headless true --server.port 8502"
   },
   "keywords": [],

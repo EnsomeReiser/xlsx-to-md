@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import json
 from typing import Dict, List
 from utils import (
     load_workbook, combined_markdown, build_zip_archive, 
@@ -123,7 +124,31 @@ with r_col:
     st.subheader("Markdown")
     mk, ak, ek = session_key("md_content", active_n), session_key("md_mode", active_n), session_key("editor_text", active_n)
     with st.container(border=True):
-        st.radio("Mode", options=["Editor", "View"], key=ak, horizontal=True)
+        m_col, c_col = st.columns([3, 1])
+        with m_col: st.radio("Mode", options=["Editor", "View"], key=ak, horizontal=True, label_visibility="collapsed")
+        with c_col:
+            # Client-side copy button to avoid lag and reruns
+            html_copy = f"""
+                <button id="copy-btn" style="width:100%; height:2.4rem; border-radius:8px; background-color:#1e293b; color:white; border:1px solid rgba(255,255,255,0.1); cursor:pointer; font-size:14px; transition:all 0.2s ease;">Copy</button>
+                <script>
+                    document.getElementById('copy-btn').onclick = function() {{
+                        const text = {json.dumps(st.session_state.get(mk, ""))};
+                        navigator.clipboard.writeText(text).then(() => {{
+                            this.innerText = 'Copied!';
+                            this.style.backgroundColor = '#2563eb';
+                            setTimeout(() => {{
+                                this.innerText = 'Copy';
+                                this.style.backgroundColor = '#1e293b';
+                            }}, 2000);
+                        }}).catch(err => {{
+                            console.error('Copy failed', err);
+                            alert('Copy failed. Please try again.');
+                        }});
+                    }};
+                </script>
+            """
+            st.components.v1.html(html_copy, height=45)
+        
         with st.expander("Settings & Translation"):
             deepl_k = st.text_input("DeepL API Key", type="password")
             google_k = st.text_input("Google Translate API Key", type="password")

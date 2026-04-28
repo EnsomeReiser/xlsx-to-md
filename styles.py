@@ -41,7 +41,7 @@ def apply_custom_styles():
         align-items: center !important;
     }
 
-    .stDownloadButton > button {
+    .stDownloadButton > button, .stButton > button {
         padding: 0.5rem 1.25rem !important;
         height: 2.8rem !important;
         border-radius: 10px !important;

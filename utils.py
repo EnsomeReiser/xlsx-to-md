@@ -3,6 +3,7 @@ import pandas as pd
 import zipfile
 import json
 import streamlit as st
+import openpyxl
 from typing import Dict, List
 from urllib import parse, request
 
@@ -32,11 +33,37 @@ def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     return c
 
 def load_workbook(uf: io.BytesIO) -> Dict[str, pd.DataFrame]:
-    wb = pd.read_excel(uf, sheet_name=None, engine="openpyxl")
+    # Use openpyxl directly to handle merged cells better for spec documents
+    wb = openpyxl.load_workbook(uf, data_only=True)
     res = {}
-    for sn, df in wb.items():
+    for sheet_name in wb.sheetnames:
+        sheet = wb[sheet_name]
+        max_row = sheet.max_row
+        max_col = sheet.max_column
+        
+        if max_row == 0 or max_col == 0:
+            continue
+            
+        # Initialize grid
+        grid = [[None for _ in range(max_col)] for _ in range(max_row)]
+        
+        # Fill base values
+        for r in range(1, max_row + 1):
+            for c in range(1, max_col + 1):
+                grid[r-1][c-1] = sheet.cell(row=r, column=c).value
+                
+        # Propagate merged cell values
+        for merged_range in sheet.merged_cells.ranges:
+            min_c, min_r, max_c, max_r = merged_range.min_col, merged_range.min_row, merged_range.max_col, merged_range.max_row
+            val = sheet.cell(row=min_r, column=min_c).value
+            for r in range(min_r, max_r + 1):
+                for c in range(min_c, max_c + 1):
+                    if r <= max_row and c <= max_col:
+                        grid[r-1][c-1] = val
+        
+        df = pd.DataFrame(grid)
         cdf = clean_dataframe(df)
-        if not cdf.empty: res[sn] = cdf
+        if not cdf.empty: res[sheet_name] = cdf
     return res
 
 def filter_dataframe(df: pd.DataFrame, q: str) -> pd.DataFrame:
